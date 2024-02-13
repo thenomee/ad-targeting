@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advertisements</title>
+</head>
+
+<body>
+  <h1>Advertisements</h1>
+
+  <div id="ads"></div>
+
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(getAdsByCoordinates, getAdsByIp);
+      } else {
+        getAdsByIp()
+      }
+    }
+
+    async function getAdsByCoordinates(position) {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      const res = await fetch(`/ads/${lat}/${lng}`)
+      showAds(res)
+    }
+
+    async function getAdsByIp() {
+      const res = await fetch("/ads/ip")
+      showAds(res)
+    }
+
+    async function showAds(res) {
+      const adsContainer = document.querySelector("#ads")
+
+      if (!res.ok) {
+        adsContainer.append("Unable to load ads")
+        return
+      }
+
+      const ads = await res.json()
+
+      if (!ads.length) {
+        adsContainer.append("No ads for this location")
+        return
+      }
+
+      const adElements = ads.map(a => {
+        const ad = a.data
+        const container = document.createElement("div")
+        const title = document.createElement("h3")
+        const description = document.createElement("div")
+
+        title.append(ad.title)
+        description.append(ad.description)
+
+        container.append(title)
+        container.append(description)
+        container.append(document.createElement("hr"))
+
+        return container
+      })
+
+      adsContainer.append(...adElements)
+    }
+    getLocation()
+  </script>
+</body>
+
+</html>
